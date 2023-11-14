@@ -49,7 +49,7 @@ int _printf(const char *format, ...)
 			{
 				if (*(format + i + 1) == '%')
 				{
-					count += write(1, "%", 1);
+					count += write(1, "%%", 1);
 					format++;
 				}
 				else
