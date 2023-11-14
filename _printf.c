@@ -1,58 +1,70 @@
+#include <stdarg.h>
+#include <unistd.h>
 #include "main.h"
 
 /**
- * _printf - Custom printf function
- * @format: Format string
+ * _printf - printf function
  *
- * Return: Number of characters printed (excluding null byte)
+ * @format: formatted string
+ * Return: The total number of outputted characters
  */
 int _printf(const char *format, ...)
 {
-	va_list num_args;
-	int next_element = 0;
-	int len = 0;
-
-	va_start(num_args, format);
+	int i, j, count, find;
+	va_list list;
+	set arguments[] = {
+		{'c', print_char},
+		{'d', print_d},
+		{'i', print_d},
+		{'s', print_str},
+		{'R', print_rot13},
+		{'r', print_rev},
+	};
 
 	if (format == NULL)
 		return (-1);
-	while (*format)
+
+	va_start(list, format);
+
+	count = 0;
+
+	for (i = 0; *(format + i); i++)
 	{
-		if (*format != '%')
+		if (*(format + i) == '%')
 		{
-			write(1, format, 1);
-			next_element++;
+			if (*(format + i + 1) == '\0')
+				continue;
+			find = 0;
+
+			for (j = 0; j < 6; j++)
+			{
+				if (*(format + i + 1) == arguments[j].spec)
+				{
+					count += arguments[j].print(list);
+					find = 1;
+					format++;
+					break;
+				}
+			}
+
+			if (find != 1)
+			{
+				if (*(format + i + 1) == '%')
+				{
+					count += write(1, "%", 1);
+					format++;
+				}
+				else
+					count += write(1, (format + i), 1);
+			}
+
 		}
 		else
 		{
-			format++;
-			if (*format == '\0')
-				break;
-			if (*format == 'c')
-			{
-				char count = va_arg(num_args, int);
-
-				write(1, &count, 1);
-				next_element++;
-			}
-			else if (*format == 's')
-			{
-				char *str = va_arg(num_args, char *);
-
-				len = 0;
-				while (str[len] != '\0')
-					len++;
-				write(1, str, len);
-				next_element = next_element + len;
-			}
-			else if (*format == '%')
-			{
-				write(1, format, 1);
-				next_element++;
-			}
+			count += write(1, (format + i), 1);
 		}
-		format++;
 	}
-	va_end(num_args);
-	return (next_element);
+	va_end(list);
+
+	return (count);
 }
